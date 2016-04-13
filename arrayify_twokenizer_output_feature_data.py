@@ -5,6 +5,8 @@ CrowdFlower. Later, we can feed this script into a classifier script, or
 just write the classifier in here.
 '''
 import numpy as np
+import random
+from sklearn.svm import SVC
 from collections import defaultdict
 
 data = open('feature_labelled_data.txt', 'r')
@@ -57,9 +59,7 @@ for i in range(len(training_data)):
 	# every subsequent element of the feature_vector vector is an indicator of whether or not the feature
 	# at that position was present in the tweet in question.
 	feature_vector[0][0] = score
-	print feature_vector
 	for feature in features:
-		print feature
 		if feature in tokens:
 			feature_vector[0][counter] = 1
 		elif feature in POS:
@@ -70,3 +70,57 @@ for i in range(len(training_data)):
 	data_set[i] = feature_vector
 
 data.close()
+# Let's try an SVM
+
+# First, separate into training and test data. Test data will be a random 10% of the original data set.
+training_data_indices = random.sample(xrange(len(data_set)), int(len(data_set) * 0.9))
+training_data = np.empty([len(data_set) * 0.9, len(features) + 1.0])
+test_data = np.empty([len(data_set) * 0.1, len(features) + 1.0])
+counter = 0
+test_counter = 0
+for i in range(len(data_set)):
+	if i in training_data_indices:
+		training_data[counter] = data_set[i]
+		counter += 1
+	else:
+		test_data[test_counter] = data_set[i]
+
+training_X = training_data[:,1:(len(features) + 1.0)]
+training_Y = training_data[:,0]
+for point in range(len(training_Y)):
+    if training_Y[point] > 3.0:
+        training_Y[point] = 1.0
+    else: 
+        training_Y[point] = 0.0
+test_X = test_data[:,1:(len(features) + 1.0)]
+test_Y = test_data[:,0]
+for point in range(len(test_Y)):
+    if test_Y[point] > 3.0:
+        test_Y[point] = 1.0
+    else: 
+        test_Y[point] = 0.0
+
+# Train SVM
+clf = SVC()
+clf.fit(training_X, training_Y)
+# Predict test data using trained SVM
+predictions = clf.predict(test_X)
+# Calculate error rate of trained SVM
+error_counter = 0.0
+for p in range(len(predictions)):
+    if predictions[p] != test_Y[p]:
+        error_counter += 1.0
+out_of_sample_error = error_counter / len(test_Y)
+print out_of_sample_error
+# Calculate in-sample error rate of trained SVM, for shits and giggles
+in_predictions = clf.predict(training_X)
+in_error_counter = 0.0
+for p in range(len(in_predictions)):
+    if in_predictions[p] != training_Y[p]:
+        in_error_counter += 1.0
+in_of_sample_error = in_error_counter / len(training_Y)
+print in_of_sample_error
+
+print predictions
+print test_Y
+

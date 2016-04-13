@@ -10,10 +10,13 @@ of this one, is "arrayify_twokenizer_output_feature_data.py"
 f = open('feature_labelled_data.txt', 'w')
 y = open('labels.txt', 'r')
 t = open('tweets2.txt', 'r')
-d = open('parsed_tweets.txt', 'r') # ./runTagger.sh tweets.txt > parsed_tweets.txt
+d = open('parsed_tweets.txt', 'r') # ./runTagger.sh tweets2.txt > parsed_tweets.txt
 lines = d.readlines()
 labels = y.readlines()
 tweets = t.readlines()
+print len(lines)
+print len(labels)
+print len(tweets)
 data = []
 counter = 0
 for i in range(len(lines)):
